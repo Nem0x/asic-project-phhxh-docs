@@ -21,27 +21,22 @@ A brief version of the design doc submitted for the contest can be found [here](
 - Stored branch address in the branch history table, doesn't need to calculate branch address in the instruction fetch stage
 - Decreased the clock period for direct-mapped cache (15ns to 9.05ns), and 2-way set associative cache (16ns to 12.5ns) after removing the aforementioned branch address calculator
 - Added `sim-gl-par` result for direct-mapped cache
-- Implemented the cache with 1-cycle-read and 2-cycle-write if cache hits, details in version 1 [continuous-cache](##-version-1-single-fetch-dual-issue-cpu-with-1-cycle-read-cache)
-- Improved the frontend to dual-fetch, details in version 2 [dual-fetch](##-version-2-dual-fetch-dual-issue-cpu-with-2-cycle-read-cache)
+- Implemented the cache with 1-cycle-read and 2-cycle-write if cache hits, details in version 1 ([continuous-cache](#version-1-single-fetch-dual-issue-cpu-with-1-cycle-read-cache))
+- Improved the frontend to dual-fetch, details in version 2 ([dual-fetch](#version-2-dual-fetch-dual-issue-cpu-with-2-cycle-read-cache))
 - Decoupled store_valid and store_ready in `commit_logic_2.v`
 
 ### Version summary
-In this project, we've made two versions of the frontend architecture: single-fetch (SF) and dual-fetch (DF), and two versions of cache implementation: 1-cycle-read (1-cyc) and 2-cycle-read (2-cyc). 
-All versions use a dual-issue backend CPU and a configurable set-associative write-back cache, with the default being a direct-mapped cache. 1-cyc/2-cyc refers to that if the cache hits for read,
-it takes 1-cycle/2-cycle to output valid data. In a SF configuration, the cache always outputs 1 valid word while with DF the cache can output 2 words if `addr[31:4]` is the same for both input 
-addresses. To compare the performances, we mainly tested three versions explained in later sections: 0) SF CPU with 2-cyc cache, 1) SF CPU with 1-cyc cache, and 2) DF CPU with 2-cyc cache. Version 0
-is treated as the main design with detailed explanation on the design and full test results, while the other versions have simplified results for comparison only. Version 0 is also the setup that 
-we submitted for the design contest.
+In this project, we've made two versions of the frontend architecture: single-fetch (SF) and dual-fetch (DF), and two versions of cache implementation: 1-cycle-read (1-cyc) and 2-cycle-read (2-cyc). All versions use a dual-issue backend CPU and a configurable set-associative write-back cache, with the default being a direct-mapped cache. 1-cyc/2-cyc refers to that if the cache hits for read, it takes 1-cycle/2-cycle to output valid data. In a SF configuration, the cache always outputs 1 valid word while with DF the cache can output 2 words if `addr[31:4]` is the same for both input addresses. To compare the performances, we mainly tested three versions explained in later sections: 0) SF CPU with 2-cyc cache, 1) SF CPU with 1-cyc cache, and 2) DF CPU with 2-cyc cache. Version 0 is treated as the main design with detailed explanation on the design and full test results, while the other versions have simplified results for comparison only. Version 0 is also the setup that we submitted for the design contest.
 
 ## Table of contents
-* [Version 0: Single-fetch dual-issue CPU with 2-cycle-read cache](##-dual-issue-out-of-order-execution-risc-v-cpu-with-branch-predictor)
-* [Version 1: Single-fetch dual-issue CPU with 1-cycle-read cache](##-version-1-single-fetch-dual-issue-cpu-with-1-cycle-read-cache)
-* [Version 2: Dual-fetch dual-issue CPU with 2-cycle-read cache](##-version-2-dual-fetch-dual-issue-cpu-with-2-cycle-read-cache)
+* [Version 0: Single-fetch dual-issue CPU with 2-cycle-read cache](#version-0-single-fetch-dual-issue-cpu-with-2-cycle-read-cache)
+* [Version 1: Single-fetch dual-issue CPU with 1-cycle-read cache](#version-1-single-fetch-dual-issue-cpu-with-1-cycle-read-cache)
+* [Version 2: Dual-fetch dual-issue CPU with 2-cycle-read cache](#version-2-dual-fetch-dual-issue-cpu-with-2-cycle-read-cache)
 
 ## Version 0: Single-fetch dual-issue CPU with 2-cycle-read cache
-Although the backend CPU is dual-issue, this branch (main) uses a single-fetch frontend, which is able to achieve higher clock frequency than the dual-fetch frontend (8% faster), with a small trade-off of 15% more number of cycles to complete benchmarks. For more details about the dual-fetch frontend and its performance data, please refer to branch [dual-fetch](https://github.com/EECS-151/asic-project-fa24-phhxh/tree/dual-fetch).
+Although the backend CPU is dual-issue, this version (main) uses a single-fetch frontend, which is able to achieve higher clock frequency than the dual-fetch frontend (8% faster), with a small trade-off of 15% more number of cycles to complete benchmarks. For more details about the dual-fetch frontend and its performance data, please refer to version 2 ([dual-fetch](#version-2-dual-fetch-dual-issue-cpu-with-2-cycle-read-cache)).
 
-There are two cache versions developed. The base version needs 2 cycles for read and 3 cycles for write if cache hits. It is stored in `src/Cache.v`. The second version reduces the number of cycles by 1 for both read and write if cache hits, but with a trade-off of longer clock period. It is stored in `src/Cache_cont.v`. For more details about the second cache version please refer to branch [continuous-cache](https://github.com/EECS-151/asic-project-fa24-phhxh/tree/continuous-cache). In short summary, the base verion achieves 22% less clock period with 31% more number of cycles to complete all benchmarks. In the main branch the default cache is the base version.
+There are two cache versions developed. The base version needs 2 cycles for read and 3 cycles for write if cache hits. It is stored in `src/Cache.v`. The second version reduces the number of cycles by 1 for both read and write if cache hits, but with a trade-off of longer clock period. It is stored in `src/Cache_cont.v`. For more details about the second cache version please refer to version 1 ([continuous-cache](#version-1-single-fetch-dual-issue-cpu-with-1-cycle-read-cache)). In short summary, the base verion achieves 22% less clock period with 31% more number of cycles to complete all benchmarks. In the main version the default cache is the base version.
 
 ### Full design diagram
 A PDF version with clear details can be found [here](main/docs/Final_design_diagram.pdf).
@@ -112,7 +107,7 @@ The register operand decoder is just for decoding the gathered information befor
 <img src="main/docs/module_images/issue_logic_2.png" alt="issue_logic" width="300"/>
 </p>
 
-Issue logic will gather the instruction-related info from the issue block (PC, instruction, predicted branch, predicted address if applicable), the operand ready and value info from the register operand decoder, the next two ROB indexes, and the ready signals from all three RS and ROB. Note that ROB needs to provide two ready signals for two indexes. The issue logic will then issue zero, one, or two instructions depending on the modules' availabilities and instruction types. In the best scenario, if two instructions don't require the same RS and all RS and ROB are ready, they can be issued together. If all the required modules for the first instruction are ready but the second one is not or there is a conflict, then there will be only one instruction issued. If the first instruction doesn't satisfy the issue condition, no matter what the condition for the second one is, there will be no instruction issued. This is to preserve the instruction order recorded correctly in ROB. For the module dependency for each instruction, please refer to [Instruction issue requirement](###instruction-issue-requirement).
+Issue logic will gather the instruction-related info from the issue block (PC, instruction, predicted branch, predicted address if applicable), the operand ready and value info from the register operand decoder, the next two ROB indexes, and the ready signals from all three RS and ROB. Note that ROB needs to provide two ready signals for two indexes. The issue logic will then issue zero, one, or two instructions depending on the modules' availabilities and instruction types. In the best scenario, if two instructions don't require the same RS and all RS and ROB are ready, they can be issued together. If all the required modules for the first instruction are ready but the second one is not or there is a conflict, then there will be only one instruction issued. If the first instruction doesn't satisfy the issue condition, no matter what the condition for the second one is, there will be no instruction issued. This is to preserve the instruction order recorded correctly in ROB. For the module dependency for each instruction, please refer to [Instruction issue requirement](#instruction-issue-requirement).
 
 If issue logic issues two instructions in the same cycle, data forwarding logic needs to be implemented. When there is a dependency between the first instruction's rd and the second instruction's rs1/rs2. The ready signal, ROB index, and its value should be updated with the first instruction's relevant information.
 
@@ -213,9 +208,9 @@ The reset control module has two input signals, one is the reset signal from the
 
 ### Dual-issue test
 
-After we integrated the real memory system including a cache with our CPU, we ran the "cachetest" benchmark and looked at the waveform. There is clear evidence that dual-issue helps to catch up with the delay caused by the memory system. The waveforms are put [here](docs/dual_issue_waveform). The full potential of our CPU can be realized if we can build a cache with two read ports, which we are running out of time to implement.
+After we integrated the real memory system including a cache with our CPU, we ran the "cachetest" benchmark and looked at the waveform. There is clear evidence that dual-issue helps to catch up with the delay caused by the memory system. The waveforms are put [here](main/docs/dual_issue_waveform). The full potential of our CPU can be realized if we can build a cache with two read ports, which we are running out of time to implement.
 
-UPDATE: dual-fetch frontend including cache with two read ports has been implemented in branch [dual-fetch](https://github.com/EECS-151/asic-project-fa24-phhxh/tree/dual-fetch).
+UPDATE: dual-fetch frontend including cache with two read ports has been implemented in version 2 ([dual-fetch](#version-2-dual-fetch-dual-issue-cpu-with-2-cycle-read-cache)).
 
 
 ### Benchmarks (sim-rtl)
@@ -228,11 +223,11 @@ The cache uses a 128-bit cache line, 6-bit index, 20-bit tag, and 4-bit word off
 
 ### Post-Synthesis
 
-Post-synthesis results are NOT up-to-date with the design, but changes are small and won't affect the overall picture. Synthesis documents are stored in [main/docs/syn_result](docs/syn_result). 
+Post-synthesis results are NOT up-to-date with the design, but changes are small and won't affect the overall picture. Synthesis documents are stored in [main/docs/syn_result](main/docs/syn_result). 
 
 ### Post-PAR
 
-Post-PAR results are NOT up-to-date with the design, but changes are small and won't affect the overall picture. With the latest design we can slightly improve the clock to 9ns or even below it (to be verified). PAR documents are stored in [docs/par_result](docs/par_result). 
+Post-PAR results are NOT up-to-date with the design, but changes are small and won't affect the overall picture. With the latest design we can slightly improve the clock to 9ns or even below it (to be verified). PAR documents are stored in [main/docs/par_result](main/docs/par_result). 
 
 #### Direct-mapped cache
 
@@ -267,7 +262,7 @@ We are able to get a 12.5ns clock period after par. The timing report is [here](
 <img src="main/docs/par_result/2-way_cache/2-way_floorplan.png" alt="dmap_cache_floorplan" width="50%"/>
 </p>
 
-[Back to table of contents](##-table-of-contents)
+[Back to table of contents](#table-of-contents)
 
 
 ## Version 1: Single-fetch dual-issue CPU with 1-cycle-read cache
@@ -275,7 +270,7 @@ This version implements cache with single-cycle-read and two-cycle-write if cach
 
 ### Single-Cycle-Read Test
 
-Using the "final" benchmark as an example, we looked at the waveform and clearly identified pattern of single-cycle-read, i.e. the output valid signal can be high for multiple continuous cycles. The screenshots are stored [here](docs/cont_cache_waveform).
+Using the "final" benchmark as an example, we looked at the waveform and clearly identified pattern of single-cycle-read, i.e. the output valid signal can be high for multiple continuous cycles. The screenshots are stored [here](continuous-cache/docs/cont_cache_waveform).
 
 ### Benchmarks (sim-rtl)
 
@@ -308,13 +303,13 @@ Below is the screenshot of the floorplan.
 <img src="continuous-cache/docs/par_result/direct-mapped_cache/direct-mapped_floorplan.png" alt="dmap_cache_floorplan" width="50%"/>
 </p>
 
-[Back to table of contents](##-table-of-contents)
+[Back to table of contents](#table-of-contents)
 
 
 ## Version 2: Dual-fetch dual-issue CPU with 2-cycle-read cache
 
 IMPORTANT: 
-- There are two cache versions developed. The base version needs 2 cycles for read and 3 cycles for write if cache hits. `src/Cache.v` and `src/Cache_2.v` are implemented in this way. The second version reduces the number of cycles by 1 for both read and write if cache hits, but with a trade-off of longer clock period. `src/Cache_cont.v` and `src/Cache_cont_2.v` are implemented in the second way. For more details about the second cache version please refer to branch [continuous-cache](https://github.com/EECS-151/asic-project-fa24-phhxh/tree/continuous-cache). The default cache is the base version. The dual-fetch continuous cache is not faster than single-fetch continuous cache. A speculation on the cause is that the number of cycles is likely memory-bound, i.e. limited by the number of cycles needed for sequential memory operations within the data cache.
+- There are two cache versions developed. The base version needs 2 cycles for read and 3 cycles for write if cache hits. `src/Cache.v` and `src/Cache_2.v` are implemented in this way. The second version reduces the number of cycles by 1 for both read and write if cache hits, but with a trade-off of longer clock period. `src/Cache_cont.v` and `src/Cache_cont_2.v` are implemented in the second way. For more details about the second cache version please refer to version 1 ([continuous-cache](#version-1-single-fetch-dual-issue-cpu-with-1-cycle-read-cache)). The default cache is the base version. The dual-fetch continuous cache is not faster than single-fetch continuous cache. A speculation on the cause is that the number of cycles is likely memory-bound, i.e. limited by the number of cycles needed for sequential memory operations within the data cache.
 
 ### Full design diagram
 A PDF version with clear details can be found [here](dual-fetch/docs/dual_fetch_diagram.pdf)! Comparing to the main branch version, this version only implements dual-fetch frontend on top of the dual-issue backend.
@@ -366,4 +361,4 @@ Compared to the single-fetch cpu, the total time is reduced by 0.035s. Below is 
 <img src="dual-fetch/docs/par_result/direct-mapped_cache/direct-mapped_floorplan.png" alt="dmap_cache_floorplan" width="50%"/>
 </p>
 
-[Back to table of contents](##-table-of-contents)
+[Back to table of contents](#table-of-contents)
