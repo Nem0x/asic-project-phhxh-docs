@@ -1,0 +1,11 @@
+title: ASIC Design Docs - PHHXH
+description: A speculative dual-issue out-of-order 5-stage RV32I CPU using Tomasulo's algorithm.
+theme: just-the-docs
+
+url: https://nem0x.github.io/asic-project-phhxh-docs/
+
+# aux_links:
+#   Template Repository: https://github.com/just-the-docs/just-the-docs-template
+
+back_to_top: true
+back_to_top_text: "Back to top"
