@@ -188,11 +188,12 @@ We ran the "cachetest" benchmark with the 2-cyc cache single-fetch frontend and 
 
 Here summarizes the default table depth used in this project. One can assume all the following results are based on this configuration unless specifically stated.
 
-| Table name   | Depth |
-|:-------------|:------|
-| Issue block  | 8     |
-| ROB          | 8     |
-| Branch RS    | 4     |
-| ALU RS       | 4     |
-| LS RS        | 4     |
-| Store buffer | 4     |
+| Table name   | Depth              |
+|:-------------|:-------------------|
+| BHT/BTB      | 16 (direct-mapped) |
+| Issue block  | 8                  |
+| ROB          | 8                  |
+| Branch RS    | 4                  |
+| ALU RS       | 4                  |
+| LS RS        | 4                  |
+| Store buffer | 4                  |
