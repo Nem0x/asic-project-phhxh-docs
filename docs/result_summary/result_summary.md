@@ -27,5 +27,6 @@ The plot above combines the number of cycles to run all benchmarks in RTL, the p
 
 ## Potential optimizations
 
+- Reduce combinational delay in cache
 - Speculative load/store execution => reduce data harzard chain
 - Further improve the branch predictor => jal/jalr can also utilize a history table and target buffer
