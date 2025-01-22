@@ -48,11 +48,11 @@ Post-synthesis results are NOT up-to-date with the design, but changes are small
 
 ### Direct-mapped cache
 
-We are able to achieve 7ns clock period post-synthesis with timing met. The timing report is [here](syn_result/direct-mapped_cache/7ns/final_time_ss_100C_1v60.setup_view.rpt).
+With the timing met, we are able to achieve a 7ns clock period post-synthesis. The timing report is [here](syn_result/direct-mapped_cache/7ns/final_time_ss_100C_1v60.setup_view.rpt).
 
 ### 2-way set-associative cache
 
-We are able to achieve 8ns clock period post-synthesis with timing met. The timing report is [here](syn_result/2-way_cache/8ns/final_time_ss_100C_1v60.setup_view.rpt).
+With the timing met, we are able to achieve an 8ns clock period post-synthesis. The timing report is [here](syn_result/2-way_cache/8ns/final_time_ss_100C_1v60.setup_view.rpt).
 
 ## Post-PAR
 
@@ -60,7 +60,7 @@ Post-PAR results are NOT up-to-date with the design, but changes are small and w
 
 ### Direct-mapped cache
 
-We are able to get 9.05ns clock period after PAR. The timing report is [here](par_result/direct-mapped_cache/riscv_top_postRoute_all.tarpt). The total time required for running all benchmarks is:
+We are able to get a 9.05ns clock period after PAR. The timing report is [here](par_result/direct-mapped_cache/riscv_top_postRoute_all.tarpt). The total time required for running all benchmarks is:
 ```math
 T_{total} = \sum N_{cycles} \times T_{clock} = 57,929,714 \times 9.05ns= 0.524s
 ```
@@ -79,9 +79,8 @@ After running sim-gl-par for more than a day, we were able to pass all benchmark
 </p>
 
 A more accurate post-PAR running time for benchmarks is:
-```math
-T_{par-total} = \sum N_{par-cycles} \times T_{clock} = 58,197,619 \times 9.05ns= 0.527s
-```
+<math> T_{par-total} = \sum N_{par-cycles} \times T_{clock} = 58,197,619 \times 9.05ns= 0.527s <math>
+
 
 ### 2-way set-associative cache
 
