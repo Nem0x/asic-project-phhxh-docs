@@ -79,7 +79,7 @@ After running sim-gl-par for more than a day, we were able to pass all benchmark
 </p>
 
 A more accurate post-PAR running time for benchmarks is:
-```katex
+```math
 T_{par-total} = \sum N_{par-cycles} \times T_{clock} = 58,197,619 \times 9.05ns= 0.527s 
 ```
 
