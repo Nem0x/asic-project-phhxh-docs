@@ -6,7 +6,7 @@ nav_order: 2
 # Backend
 {: .no_toc}
 
-This section explains backend modules' functionality in detail.
+This section explains the backend modules' functionality in detail.
 
 ## Table of Contents
 {: .no_toc .text-delta }
@@ -43,17 +43,17 @@ The issue block has a FIFO table for storing instructions received from instruct
 
 Issue block's output ports include 2 sets of issue-related information, namely the information stored in FIFO, rs1, and rs2 indexes. The two indexes will be sent to the register file, and register status table, to fetch the stored readiness of the operands and their stored values. 
 
-Apart from the basic functions, the issue block is also optimized for special events like early branching and jal/jalr fetched. When a branch misprediction happens, the issue block will receive a high at the "pause_clear_issue" port then clear all its entries and transition into the PAUSE state. In the PAUSE state, no instruction will be issued to the downstream modules, but instruction fetch continues. When ROB finally processes the misprediction branch instruction, it will clear all RS, register status table, pipelined execution unit, and itself, as well as send a signal to the "resume_issue" port of the issue block to let it transition back to the NORMAL state. 
+Apart from the basic functions, the issue block is also optimized for special events like early branching and jal/jalr fetched. When a branch misprediction happens, the issue block will receive a high at the `pause_clear_issue` port then clear all its entries and transition into the `PAUSE` state. In the `PAUSE` state, no instruction will be issued to the downstream modules, but instruction fetch continues. When ROB finally processes the misprediction branch instruction, it will clear all RS, register status table, pipelined execution unit, and itself, as well as send a signal to the `resume_issue` port of the issue block to let it transition back to the `NORMAL` state. 
 
-jal/jalr will always be treated as misprediction. So another optimization can be made: in the case where jal/jalr is enqueued, the issue block will transition to the STALL state - no instruction will be fetched in this state. Later when a jal/jalr or previously issued mispredicted branch instruction sends a "pause_clear_issue" signal. The issue block will transition back to the PAUSE state and start fetching new instructions again but stop issuing in the same time. Later a "resume_issue" will come to resume issue again.
+jal/jalr will always be treated as misprediction. So another optimization can be made: in the case where jal/jalr is enqueued, the issue block will transition to the `STALL` state - no instruction will be fetched in this state. Later when a jal/jalr or previously issued mispredicted branch instruction sends a `pause_clear_issue` signal. The issue block will transition back to the `PAUSE` state and start fetching new instructions again but stop issuing in the same time. Later a `resume_issue` will come to resume issue again.
 
-Another special case is that in the PAUSE state, the issue block fetches a jal/jalr, and then it will transition to the PAUSE_STALL state that stops both fetching and issuing. When "resume_issue" comes it will go back to STALL and follow the same routine as described above.
+Another special case is that in the `PAUSE` state, the issue block fetches a jal/jalr, and then it will transition to the `PAUSE_STALL` state that stops both fetching and issuing. When `resume_issue` comes it will go back to `STALL` and follow the same routine as described above.
 
-Output ports "stall" and "fetch_ready" are sent to the fetch logic for controlling the instruction memory. Because we have a synchronous read memory, the input signal of memory is separated by two cycles from the output of the issue block. So we need to send a stop signal to IMEM when there is only one empty entry in the issue block, otherwise there is a chance a valid instruction couldn't be received by the issue block. In summary, all four states of the issue block are:
-- NORMAL
-- PAUSE
-- STALL
-- PAUSE_STALL
+Output ports `stall` and `fetch_ready` are sent to the fetch logic to control the instruction memory. Because we have a synchronous read memory, the input signal of memory is separated by two cycles from the output of the issue block. So we need to send a stop signal to IMEM when there is only one empty entry in the issue block, otherwise there is a chance a valid instruction couldn't be received by the issue block. In summary, all four states of the issue block are:
+- `NORMAL`
+- `PAUSE`
+- `STALL`
+- `PAUSE_STALL`
 
 
 ### Register file
@@ -69,9 +69,9 @@ The register file is modified for dual-issue. It now supports two simultaneous w
 <img src="table_images/reg_status_table.png" alt="reg_status_table" width="200"/>
 </p>
 
-The register status table is for storing the ROB index that will produce the latest corresponding register result, which is one of the core components of the Tomasulo algorithm. For supporting dual issues, all read and write ports are doubled. The order preference is the same as the register file, the second port is always treated as later than the first. Because issue ports intrinsically have higher priority than commit ports, the write priority is issue_2 > issue_1 > commit_2 > commit_1.
+The register status table is for storing the ROB index that will produce the latest corresponding register result, which is one of the core components of the Tomasulo algorithm. For supporting dual issues, all read and write ports are doubled. The order preference is the same as the register file, the second port is always treated as later than the first. Because issue ports intrinsically have higher priority than commit ports, the write priority is `issue_2` > `issue_1` > `commit_2` > `commit_1`.
 
-During the issue stage, an inquiry with the ROB indexes will be sent to ROB to get the latest readiness and the values of the operands. After all the information is gathered, the final readiness and values will be produced by the register operand decoder. If any operand is not ready in the issue stage, the ROB index read from the register status table will also be issued to the corresponding RS together with the instruction. 
+During the issue stage, an inquiry with the ROB indexes will be sent to ROB to get the latest readiness and the values of the operands. After all the information is gathered, the final readiness and values will be produced by the register operand decoder. If any operand is not ready in the issue stage, the ROB index read from the register status table will also be issued to the corresponding RS, along with the instruction. 
 
 ### Register operand decoder
 <p align="center">
@@ -114,7 +114,7 @@ Commit logic receives two sets of commit-related data and produces one set of CS
 <img src="table_images/Branch_RS_FIFO.png" alt="BR_FIFO" width="100%"/>
 </p>
 
-Branch RS is also a FIFO. B-type and jal/jalr will be sent here. We use funct3 of branch instructions to identify the specific types. Since B-type only occupies six of the eight available values, we let jal to occupy "3'b010" and jalr to occupy "3'b011". It receives the instruction info from the issue logic. Once the instruction has all the operands ready. It will be sent to the branch unit for execution. There is an additional pointer tracking the computing progress on top of the read pointer and write pointer (not shown in the table). If a misprediction for B-type happens or jal/jalr finishes execution, the FIFO write pointer will be set to the next computing pointer, such that when the read pointer processes all the above instructions the FIFO will be empty.
+Branch RS is also a FIFO. B-type and jal/jalr will be sent here. We use `funct3` of branch instructions to identify the specific types. Since B-type only occupies six of the eight available values, we let jal occupy `3'b010` and jalr occupy `3'b011`. It receives the instruction info from the issue logic. Once the instruction has all the operands ready. It will be sent to the branch unit for execution. There is an additional pointer tracking the computing progress on top of the read pointer and write pointer (not shown in the table). If a misprediction for B-type happens or jal/jalr finishes execution, the FIFO write pointer will be set to the next computing pointer, such that when the read pointer processes all the above instructions the FIFO will be empty.
 
 FIFO read is processed by the CDB write port. There are two parallel CDB read ports that always listen to the broadcast results. If it matches the operand ROB index, and the operand is still not ready, Branch RS will update the corresponding entry with the result and set it to be ready. In the case of an instruction being issued and its operand value being broadcasted by CDB, All RS should capture this dependency and update the operand with the CDB value.
 
@@ -123,7 +123,7 @@ FIFO read is processed by the CDB write port. There are two parallel CDB read po
 <img src="module_images/Br_unit.png" alt="BR_unit" width="300"/>
 </p>
 
-The Branch unit has an adder to compute the branch address, and a couple of comparators to decide whether to branch for B-type instructions. Once a B-type misprediction or jal/jalr is detected, it will send the correct PC address to the frontend. Once the correct address is to be read by instruction memory in the next cycle, a "jump_fire" signal is sent back to the Branch unit, such that the "output_valid" signal is asserted, and Branch RS is able to receive the misprediction result and move on.
+The Branch unit has an adder to compute the branch address, and a couple of comparators to decide whether to branch for B-type instructions. Once a B-type misprediction or jal/jalr is detected, it will send the correct PC address to the frontend. Once the correct address is to be read by instruction memory in the next cycle, a `jump_fire` signal is sent back to the Branch unit, such that the `output_valid` signal is asserted, and Branch RS is able to receive the misprediction result and move on.
 
 ### ALU reservation station (ALU RS)
 <p align="center">
@@ -140,7 +140,7 @@ ALU RS is different from the rest of RS. It doesn't use FIFO, instead, it uses a
 <img src="module_images/ALU_unit.png" alt="ALU_unit" width="300"/>
 </p>
 
-ALU is just an ordinary ALU with some extra information such as the ALU RS index and valid bit transmitted through. This design is easy to be adapted to pipeline stages in case other complicated ALU operations are to be added.
+ALU is just an ordinary ALU with some extra information such as the ALU RS index and valid bit transmitted through. This design is easy to adapt to pipeline stages in case other complicated ALU operations are to be added.
 
 ### Load/Store reservation station (LS RS)
 <p align="center">
@@ -150,7 +150,7 @@ ALU is just an ordinary ALU with some extra information such as the ALU RS index
 <img src="table_images/LS_RS_FIFO.png" alt="LS_table" width="90%"/>
 </p>
 
-Load/Store RS is also a FIFO. This is to preserve the relative order of all load and store instructions. In general, it is very similar to Branch RS, except that it doesn't need a clear action - reset is enough. We use the sixth bit of instruction to distinguish load and store. Within load (store), we use funct3 to distinguish between lb/lbu/lh/lhu/lw (sb/sh/sw).
+Load/Store RS is also a FIFO. This is to preserve the relative order of all load and store instructions. In general, it is very similar to Branch RS, except that it doesn't need a clear action - reset is enough. We use the sixth bit of instruction to distinguish load and store. Within load (store), we use `funct3` to distinguish between lb/lbu/lh/lhu/lw (sb/sh/sw).
 
 ### Memory unit
 <p align="center">
@@ -167,18 +167,18 @@ The memory unit, or load/store execution unit, has the most complicated structur
 <img src="module_images/CDB_arbiter_2.png" alt="CDB_arbiter" width="300"/>
 </p>
 
-The CDB arbiter listens to the broadcast request from all three RS. It chooses up to two valid requests to broadcast on the CDB, which is monitored by all three RS and the ROB. We currently prioritize LS RS first, Branch RS second, and ALU RS last. Because load-store instructions take longer cycles to complete, LS RS is the most likely one to be full, thus it needs a faster turnaround time. Branch RS is the second because if a branch misprediction happens, we want it to be committed from ROB as soon as possible, so that the execution unit can start on meaningful tasks early. In reality, even for dual-issue, three requests are hardly all valid, so this priority setting is not causing noticeable delay.
+The CDB arbiter listens to the broadcast request from all three RS. It chooses up to two valid requests to broadcast on the CDB, which is monitored by all three RS and the ROB. We currently prioritize LS RS first, Branch RS second, and ALU RS last. Because load-store instructions take longer cycles to complete, LS RS is the most likely one to be full, thus it needs a faster turnaround time. Branch RS is the second because if a branch misprediction happens, we want it to be committed from ROB as soon as possible so that the execution unit can start on meaningful tasks early. In reality, even for dual-issue, three requests are hardly all valid, so this priority setting is not causing noticeable delay.
 
 ### Reset control
 <p align="center">
 <img src="module_images/reset_control.png" alt="reset_control" width="300"/>
 </p>
 
-The reset control module has two input signals, one is the reset signal from the host, second is the "commit_mispred" signal from ROB committing mispredicted B-type or jal/jalr instructions. global reset is used to control the issue block, branch predictor, and CSR. It only reacts to the host reset signal. Host reset and "commit_mispred" both control "mispred_reset". This is used to reset everything after the issue block. PC_reset is only controlled by reset_all but delayed by one cycle, to be triggered after the reset of other tables is complete.
+The reset control module has two input signals, one is the reset signal from the host, second is the `commit_mispred` signal from ROB committing mispredicted B-type or jal/jalr instructions. global reset is used to control the issue block, branch predictor, and CSR. It only reacts to the host reset signal. Host reset and `commit_mispred` both control `mispred_reset`. This is used to reset everything after the issue block. `PC_reset` is only controlled by `reset_all` but delayed by one cycle, to be triggered after the reset of other tables is complete.
 
 ## Dual-issue test
 
-We ran the "cachetest" benchmark with the 2-cyc cache single-fetch frontend and looked at the waveform. There is clear evidence that dual-issue helps to catch up with the delay caused by the memory system. The waveforms are put [here](dual-issue_waveform). Below shows a zoomed-in waveform.
+We ran the `cachetest` benchmark with the 2-cyc cache single-fetch frontend and looked at the waveform. There is clear evidence that dual-issue helps to catch up with the delay caused by the memory system. The waveforms are put [here](dual-issue_waveform). Below is a zoomed-in waveform.
 
 <p align="center">
 <img src="dual-issue_waveform/dual_issue_3.png" alt="dual-issue_waveform" width="100%"/>
